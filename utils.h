@@ -1,0 +1,9 @@
+#ifndef MAPREDUCE_MULTI_THREADED_PROGRAMMING_UTILS_H
+#define MAPREDUCE_MULTI_THREADED_PROGRAMMING_UTILS_H
+
+#define MEMORY_ALLOC_FAILED "system error: memory allocation failed\n"
+#define PTHREAD_CREATE_FAILED "system error: pthread_create failed\n"
+#define SUCCESS_CODE 0
+#define EXIT_ERROR_CODE 1
+#define INITIAL_COUNT 0
+#endif //MAPREDUCE_MULTI_THREADED_PROGRAMMING_UTILS_H

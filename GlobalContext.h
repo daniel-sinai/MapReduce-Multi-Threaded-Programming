@@ -1,11 +1,13 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <cstdio>
-#include <atomic>
 #include <pthread.h>
 #include <vector>
+#include <algorithm>
 #include "MapReduceClient.h"
 #include "ThreadContext.h"
+#include "utils.h"
+#include "Barrier.h"
 
 #ifndef _GLOBALCONTEXT_H_
 #define _GLOBALCONTEXT_H_
@@ -22,6 +24,8 @@ class GlobalContext {
   OutputVec output_vec;
   InputVec input_vec;
   const MapReduceClient* client;
+  int input_vec_len;
+  Barrier* threads_barrier;
  public:
   GlobalContext (const MapReduceClient &client, const InputVec &inputVec,
                  OutputVec &outputVec, int multiThreadLevel);
