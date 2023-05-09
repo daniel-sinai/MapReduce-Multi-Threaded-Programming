@@ -13,12 +13,12 @@ Barrier::Barrier(int numThreads)
 Barrier::~Barrier()
 {
 	if (pthread_mutex_destroy(&mutex) != SUCCESS_CODE) {
-		fprintf(stderr, "[[Barrier]] error on pthread_mutex_destroy");
-		exit(1);
+		fprintf(stderr, PTHREAD_MUTEX_DESTROY_FAILED);
+		exit(EXIT_ERROR_CODE);
 	}
-	if (pthread_cond_destroy(&cv) != 0){
-		fprintf(stderr, "[[Barrier]] error on pthread_cond_destroy");
-		exit(1);
+	if (pthread_cond_destroy(&cv) != SUCCESS_CODE){
+		fprintf(stderr, PTHREAD_COND_DESTROY_FAILED);
+		exit(EXIT_ERROR_CODE);
 	}
 }
 
@@ -26,23 +26,23 @@ Barrier::~Barrier()
 void Barrier::barrier()
 {
 	if (pthread_mutex_lock(&mutex) != SUCCESS_CODE){
-		fprintf(stderr, "[[Barrier]] error on pthread_mutex_lock");
-		exit(1);
+		fprintf(stderr, PTHREAD_MUTEX_LOCK_ERROR);
+		exit(EXIT_ERROR_CODE);
 	}
 	if (++count < numThreads) {
 		if (pthread_cond_wait(&cv, &mutex) != SUCCESS_CODE){
-			fprintf(stderr, "[[Barrier]] error on pthread_cond_wait");
-			exit(1);
+			fprintf(stderr, PTHREAD_COND_WAIT_ERROR);
+			exit(EXIT_ERROR_CODE);
 		}
 	} else {
 		count = 0;
 		if (pthread_cond_broadcast(&cv) != SUCCESS_CODE) {
-			fprintf(stderr, "[[Barrier]] error on pthread_cond_broadcast");
-			exit(1);
+			fprintf(stderr, PTHREAD_COND_DESTROY_BROADCAST);
+			exit(EXIT_ERROR_CODE);
 		}
 	}
 	if (pthread_mutex_unlock(&mutex) != SUCCESS_CODE) {
-		fprintf(stderr, "[[Barrier]] error on pthread_mutex_unlock");
-		exit(1);
+		fprintf(stderr, PTHREAD_MUTEX_UNLOCK_FAILED);
+		exit(EXIT_ERROR_CODE);
 	}
 }

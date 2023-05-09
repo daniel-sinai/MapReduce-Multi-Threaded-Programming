@@ -1,8 +1,7 @@
 #include "ThreadContext.h"
-#include <atomic>
 
-ThreadContext::ThreadContext (int threadID, std::atomic<uint32_t>* input_counter,
-                              std::atomic<uint32_t>* mid_counter, std::atomic<uint32_t>* output_counter)
+ThreadContext::ThreadContext (int threadID, std::atomic<uint32_t>* next_pair_index,
+                              std::atomic<uint32_t>* progress_counter, GlobalContext* global_context)
 {
   this->threadID = threadID;
   this->input_counter = input_counter;

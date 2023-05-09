@@ -1,9 +1,10 @@
+#ifndef EX3_THREADCONTEXT_H
+#define EX3_THREADCONTEXT_H
+
 #include <atomic>
 #include <vector>
 #include "MapReduceClient.h"
-
-#ifndef EX3_THREADCONTEXT_H
-#define EX3_THREADCONTEXT_H
+#include "GlobalContext.h"
 
 class ThreadContext {
  private:

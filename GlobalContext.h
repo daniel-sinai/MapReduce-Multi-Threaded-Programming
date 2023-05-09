@@ -1,16 +1,17 @@
+#ifndef _GLOBALCONTEXT_H_
+#define _GLOBALCONTEXT_H_
+
 #include <stdlib.h>
 #include <pthread.h>
 #include <cstdio>
 #include <pthread.h>
 #include <vector>
 #include <algorithm>
+#include <atomic>
 #include "MapReduceClient.h"
 #include "ThreadContext.h"
 #include "utils.h"
 #include "Barrier.h"
-
-#ifndef _GLOBALCONTEXT_H_
-#define _GLOBALCONTEXT_H_
 
 //typedef void (*map_function) (const K1*, const V1*, void*);
 //typedef void (*reduce_function) (const IntermediateVec*, void*);
@@ -19,6 +20,7 @@
 class GlobalContext {
  private:
   std::vector<pthread_t*> threads;
+  int multi_thread_level;
   std::vector<ThreadContext*> contexts;
   std::atomic<uint32_t> atomic_counter {0};
   OutputVec output_vec;
@@ -26,6 +28,9 @@ class GlobalContext {
   const MapReduceClient* client;
   int input_vec_len;
   Barrier* threads_barrier;
+  MidVectors shuffled_vectors;
+  stage_t stage;
+
  public:
   GlobalContext (const MapReduceClient &client, const InputVec &inputVec,
                  OutputVec &outputVec, int multiThreadLevel);
