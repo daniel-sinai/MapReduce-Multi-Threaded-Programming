@@ -1,5 +1,6 @@
 #include "GlobalContext.h"
 
+
 GlobalContext::GlobalContext (const MapReduceClient &client,
                               const InputVec &inputVec, OutputVec &outputVec,
                               int multiThreadLevel)
@@ -18,12 +19,57 @@ GlobalContext::GlobalContext (const MapReduceClient &client,
     }
 }
 
-void GlobalContext::job_manager () {
+void GlobalContext::start_job() {
+    for (int i = 0; i < this->multi_thread_level; ++i) {
+        ThreadContext *new_context = new(std::nothrow) ThreadContext (i, &(this->next_pair_index), &(this->progress_counter), this);
+        if (new_context == nullptr)
+        {
+            // TODO free system
+            fprintf(stderr, MEMORY_ALLOC_FAILED);
+            exit(EXIT_ERROR_CODE);
+        }
+        contexts.push_back (new_context);
+    }
+
+    for (int i = 0; i < this->threads_barrier; ++i) {
+        pthread_t *new_thread = new(std::nothrow) pthread_t();
+        if (new_thread == nullptr)
+        {
+            // TODO free system
+            fprintf(stderr, MEMORY_ALLOC_FAILED);
+            exit(EXIT_ERROR_CODE);
+        }
+        if (pthread_create(new_thread, NULL, job_manager, contexts[i]) != SUCCESS_CODE)
+        {
+            // TODO free system
+            fprintf(stderr, PTHREAD_CREATE_FAILED);
+            exit(EXIT_ERROR_CODE);
+        }
+        threads.push_back(new_thread);
+    }
+}
+
+void* GlobalContext::job_manager (void* arg) {
+    ThreadContext* tc = (ThreadContext*) arg;
+    set_stage (MAP_STAGE);
+    map_manager (tc);
+    sort_mid_vector (tc);
+    threads_barrier->barrier ();
+    if (tc->get_thread_id() == 0)
+    {
+        reset_counters();
+        set_stage(SHUFFLE_STAGE);
+        shuffle_manager(tc);
+        set_stage(REDUCE_STAGE);
+        reset_counters();
+    }
+    threads_barrier->barrier();
     // map phase till end list
     // wait for all map phase
     // wait for shuffle
     // reduce phase till end list
     // terminate
+    return nullptr;
 }
 
 void GlobalContext::map_manager(ThreadContext* tc) {
