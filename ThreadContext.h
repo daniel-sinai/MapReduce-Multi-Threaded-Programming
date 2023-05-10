@@ -9,22 +9,28 @@
 class ThreadContext {
  private:
     int thread_id;
-    std::atomic<uint32_t>* next_pair_index;
-    std::atomic<uint32_t>* progress_counter;
-    uint32_t curr_vector_id;
-    std::vector<IntermediatePair> vector;
+    int input_vector_id;
+    int shuffle_vector_id;
+    OutputVec reduce_vector;
+ public:
+    IntermediateVec map_vector;
+    ThreadContext (int threadID, GlobalContext* global_context);
     GlobalContext* global_context;
 
- public:
-    ThreadContext (int threadID, std::atomic<uint32_t>* next_pair_index, std::atomic<uint32_t>* progress_counter, GlobalContext* global_context);
-    std::atomic<uint32_t>* get_input_counter () { return this->next_pair_index; }
-    uint32_t increment_next_pair_index () { return (*(this->next_pair_index))++; };
-    uint32_t increment_progress_counter () { return (*(this->progress_counter))++; };
-    void set_curr_vector_id (uint32_t id) { this->curr_vector_id = id; }
-    uint32_t get_curr_vector_id () { return this->curr_vector_id; }
-    void append_to_vector (IntermediatePair to_append) { this->vector.push_back (to_append); }
-    std::vector<IntermediatePair>* get_vector () { return &(this->vector); }
+    // Getters
+    int get_input_vector_id () { return this->input_vector_id; }
     int get_thread_id () const { return this->thread_id; }
+    int get_shuffle_vector_id () { return shuffle_vector_id; }
+
+    // Setters
+    void set_input_vector_id (int id) { this->input_vector_id = id; }
+    void set_shuffle_vector_id (int id) { this->shuffle_vector_id = id; }
+
+    // Vectors
+    void append_to_map_vector (IntermediatePair to_append) { this->map_vector.push_back (to_append); }
+    std::vector<IntermediatePair>* get_map_vector () { return &(this->map_vector); }
+    void append_to_reduce_vector (OutputPair to_append) { this->reduce_vector.push_back (to_append); }
+    std::vector<IntermediatePair>* get_reduce_vector () { return &(this->map_vector); }
 };
 
 #endif //EX3_THREADCONTEXT_H
