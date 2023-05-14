@@ -17,6 +17,8 @@
 
 typedef std::vector<std::vector<IntermediatePair>*> MidVectors;
 
+class ThreadContext;
+
 class GlobalContext {
  private:
     int multi_thread_level;
@@ -37,20 +39,21 @@ class GlobalContext {
 
     GlobalContext (const MapReduceClient &client, const InputVec &inputVec,
                  OutputVec &outputVec, int multiThreadLevel);
-  void start_job ();
-  void* job_manager (void* arg);
-  void map_manager (ThreadContext* tc);
-  void sort_mid_vector (ThreadContext* tc);
-  void shuffle_manager (ThreadContext* tc);
-  void reduce_manager ();
-  K2* find_max_k2_from_threads_vectors ();
-  int get_pairs_number () const { return this->pairs_number; }
-  bool is_intermediary_keys_equal (K2* key1, K2* key2);
-  static int compare_k2(const IntermediatePair& p1, const IntermediatePair& p2);
-  void reset_counters ();
-  stage_t get_stage() { return stage; }
-  void set_stage(stage_t new_stage) { this->stage = new_stage; }
-  float get_progress_percentage() { return (float) this->progress_counter / (float) this->pairs_number; }
+
+    // Getters
+    float get_map_progress_percentage () { return (float) this->progress_counter / (float) this->pairs_number * 100.0; }
+    float get_shuffle_progress_percentage () { return (float) this->progress_counter / (float) intermediary_elements_number * 100.0; }
+    int get_pairs_number () const { return this->pairs_number; }
+    stage_t get_stage() { return stage; }
+
+    // Setters
+    void set_stage(stage_t new_stage) { this->stage = new_stage; }
+
+    // Atmoic variables
+    uint32_t increment_next_pair_index () { return (this->next_pair_index)++; }
+    uint32_t increment_progress_counter () { return (this->progress_counter)++; }
+    uint32_t increment_intermediary_elements_number () { return (this->intermediary_elements_number)++; }
+    void reset_counters ();
 };
 
 #endif //_GLOBALCONTEXT_H_
