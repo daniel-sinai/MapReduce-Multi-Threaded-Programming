@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <iostream>
 #include "MapReduceClient.h"
 #include "MapReduceFramework.h"
 #include "utils.h"
@@ -51,7 +52,7 @@ class GlobalContext {
 
     // Atmoic variables
     uint32_t increment_next_pair_index () { return (this->next_pair_index)++; }
-    uint32_t increment_progress_counter () { return (this->progress_counter)++; }
+    uint32_t increment_progress_counter (int inc=1) { return this->progress_counter.fetch_add(inc); }
     uint32_t increment_intermediary_elements_number () { return (this->intermediary_elements_number)++; }
     void reset_counters ();
 };

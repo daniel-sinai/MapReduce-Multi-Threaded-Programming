@@ -55,11 +55,10 @@ void waitForJob(JobHandle job)
 
 void emit3 (K3* key, V3* value, void* context)
 {
-    ThreadContext* tc = (ThreadContext*) context;
-    GlobalContext* gc = tc->global_context;
-//    pthread_mutex_lock(&gc->output_vec_mutex);
-    gc->output_vec.push_back(std::make_pair(key, value));
-//    pthread_mutex_unlock(&gc->output_vec_mutex);
-    gc->increment_progress_counter();
-    return;
+  auto *tc = (ThreadContext *) context;
+  GlobalContext *gc = tc->global_context;
+  pthread_mutex_lock (&gc->output_vec_mutex);
+  gc->output_vec.push_back (std::make_pair (key, value));
+  pthread_mutex_unlock (&gc->output_vec_mutex);
+  gc->increment_progress_counter (tc->curr_reduce_vector_size);
 }

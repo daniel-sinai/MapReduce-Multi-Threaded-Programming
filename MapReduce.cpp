@@ -4,28 +4,17 @@
 std::vector<pthread_t*> MapReduce::threads;
 std::vector<ThreadContext*> MapReduce::contexts;
 
-void MapReduce::start_job(int multi_thread_level, GlobalContext* global_context) {
-    for (int i = 0; i < multi_thread_level; ++i) {
-        ThreadContext *curr_context = new(std::nothrow) ThreadContext (i, global_context);
-        if (curr_context == nullptr)
+void MapReduce::start_job (int multi_thread_level, GlobalContext *global_context)
+{
+  for (int i = 0; i < multi_thread_level; ++i)
+    {
+      ThreadContext *curr_context = new ThreadContext (i, global_context);
+      MapReduce::contexts.push_back (curr_context);
+      pthread_t *curr_thread = new pthread_t ();
+      if (pthread_create (curr_thread, NULL, job_manager, curr_context) != SUCCESS_CODE)
         {
-            // TODO free system
-            fprintf(stderr, MEMORY_ALLOC_FAILED);
-            exit(EXIT_ERROR_CODE);
-        }
-        MapReduce::contexts.push_back(curr_context);
-        pthread_t *curr_thread = new(std::nothrow) pthread_t();
-        if (curr_thread == nullptr)
-        {
-            // TODO free system
-            fprintf(stderr, MEMORY_ALLOC_FAILED);
-            exit(EXIT_ERROR_CODE);
-        }
-        if (pthread_create(curr_thread, NULL, job_manager, curr_context) != SUCCESS_CODE)
-        {
-            // TODO free system
-            fprintf(stderr, PTHREAD_CREATE_FAILED);
-            exit(EXIT_ERROR_CODE);
+          std::cout << PTHREAD_CREATE_FAILED;
+          exit (EXIT_ERROR_CODE);
         }
         threads.push_back(curr_thread);
     }
@@ -52,13 +41,15 @@ void *MapReduce::job_manager(void *arg) {
     return nullptr;
 }
 
-void MapReduce::map_manager(ThreadContext *tc, GlobalContext *gc) {
-    uint32_t curr_id = gc->increment_next_pair_index();
-    while (curr_id < gc->get_pairs_number ()) {
-        InputPair key_value = gc->input_vec[curr_id];
-        gc->client->map(key_value.first, key_value.second, tc);
-        curr_id = gc->increment_next_pair_index();
-        gc->increment_progress_counter();
+void MapReduce::map_manager (ThreadContext *tc, GlobalContext *gc)
+{
+  uint32_t curr_id = gc->increment_next_pair_index ();
+  while (curr_id < gc->get_pairs_number ())
+    {
+      InputPair key_value = gc->input_vec[curr_id];
+      gc->client.map (key_value.first, key_value.second, tc);
+      curr_id = gc->increment_next_pair_index ();
+      gc->increment_progress_counter ();
     }
 }
 

@@ -8,14 +8,14 @@
 
 class ThreadContext {
  private:
-    int thread_id;
-    int input_vector_id;
-    int shuffle_vector_id;
-    OutputVec reduce_vector;
+  int thread_id;
+  int input_vector_id;
+  int shuffle_vector_id;
  public:
-    IntermediateVec map_vector;
-    ThreadContext (int threadID, GlobalContext* global_context);
-    GlobalContext* global_context;
+  int curr_reduce_vector_size;
+  IntermediateVec map_vector;
+  ThreadContext (int threadID, GlobalContext *global_context);
+  GlobalContext *global_context;
 
     // Getters
     int get_input_vector_id () { return this->input_vector_id; }
