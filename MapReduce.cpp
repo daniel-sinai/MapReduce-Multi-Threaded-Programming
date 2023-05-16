@@ -12,7 +12,8 @@ void MapReduce::start_job (int multi_thread_level, GlobalContext *global_context
       pthread_t *curr_thread = new pthread_t ();
       if (pthread_create (curr_thread, NULL, job_manager, curr_context) != SUCCESS_CODE)
         {
-          std::cout << PTHREAD_CREATE_FAILED;
+          fprintf (stderr, PTHREAD_CREATE_FAILED);
+//          std::cout << PTHREAD_CREATE_FAILED;
           exit (EXIT_ERROR_CODE);
         }
       threads.push_back (curr_thread);
@@ -29,8 +30,7 @@ void *MapReduce::job_manager (void *arg)
   gc->threads_barrier->barrier ();
   if (tc->get_thread_id () == 0)
     {
-      gc->reset_counters ();
-      gc->set_stage (SHUFFLE_STAGE);
+      gc->set_stage_and_reset_general_atomic(SHUFFLE_STAGE, true, false);
       shuffle_manager (tc, gc);
       gc->reset_counters ();
       gc->set_stage (REDUCE_STAGE);
@@ -74,7 +74,7 @@ void MapReduce::shuffle_manager (ThreadContext *tc, GlobalContext *gc)
             {
               curr_key_vector->push_back (curr_thread_vector.back ());
               curr_thread_vector.pop_back ();
-              gc->increment_progress_counter ();
+              gc->increment_first_counter_general_atomic ();
             }
         }
       gc->shuffled_vectors.push_back (curr_key_vector);
@@ -127,12 +127,12 @@ void MapReduce::free_system ()
 {
   for (auto it: threads)
     {
-      pthread_t *to_free = *it;
+      pthread_t *to_free = it;
       delete to_free;
     }
   for (auto it: contexts)
     {
-      ThreadContext *to_free = *it;
+      ThreadContext *to_free = it;
       delete to_free;
     }
 }

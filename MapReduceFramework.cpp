@@ -61,7 +61,7 @@ void waitForJob (JobHandle job)
     {
       for (auto it: MapReduce::threads)
         {
-          if (pthread_join (it, NULL) != SUCCESS_CODE)
+          if (pthread_join (*it, NULL) != SUCCESS_CODE)
             {
               std::cout << PTHREAD_JOIN_FAILED;
               exit (EXIT_ERROR_CODE);
@@ -79,5 +79,5 @@ void emit3 (K3 *key, V3 *value, void *context)
   pthread_mutex_lock (&gc->output_vec_mutex);
   gc->output_vec.push_back (std::make_pair (key, value));
   pthread_mutex_unlock (&gc->output_vec_mutex);
-  gc->increment_progress_counter (tc->curr_reduce_vector_size);
+  gc->increment_first_counter_general_atomic (tc->curr_reduce_vector_size);
 }
