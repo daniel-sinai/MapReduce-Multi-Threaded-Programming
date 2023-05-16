@@ -31,12 +31,15 @@ class GlobalContext {
     int pairs_number;
     stage_t stage;
  public:
-    pthread_mutex_t output_vec_mutex = PTHREAD_MUTEX_INITIALIZER;
-    MidVectors shuffled_vectors;
-    OutputVec output_vec;
-    InputVec input_vec;
-    Barrier* threads_barrier;
-    const MapReduceClient* client;
+  pthread_mutex_t output_vec_mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t wait_for_job_mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+  MidVectors shuffled_vectors;
+  OutputVec &output_vec;
+  const InputVec &input_vec;
+  Barrier *threads_barrier;
+  const MapReduceClient &client;
+  bool is_job_ended = false;
 
     GlobalContext (const MapReduceClient &client, const InputVec &inputVec,
                  OutputVec &outputVec, int multiThreadLevel);
