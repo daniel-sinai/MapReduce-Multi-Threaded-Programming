@@ -1,6 +1,9 @@
 #ifndef BARRIER_H
 #define BARRIER_H
+
 #include <pthread.h>
+#include <cstdlib>
+#include <cstdio>
 #include "utils.h"
 
 // a multiple use barrier

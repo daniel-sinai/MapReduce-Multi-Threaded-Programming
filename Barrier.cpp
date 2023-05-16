@@ -1,6 +1,4 @@
 #include "Barrier.h"
-#include <cstdlib>
-#include <cstdio>
 
 Barrier::Barrier(int numThreads)
 		: mutex(PTHREAD_MUTEX_INITIALIZER)
