@@ -8,7 +8,7 @@ JobHandle
 startMapReduceJob (const MapReduceClient &client, const InputVec &inputVec,
                    OutputVec &outputVec, int multiThreadLevel)
 {
-  GlobalContext *global_context = new GlobalContext (
+  auto *global_context = new GlobalContext (
       client, inputVec, outputVec, multiThreadLevel);
   MapReduce::start_job (multiThreadLevel, global_context);
   return global_context;
@@ -16,7 +16,7 @@ startMapReduceJob (const MapReduceClient &client, const InputVec &inputVec,
 
 void emit2 (K2 *key, V2 *value, void *context)
 {
-  ThreadContext *tc = (ThreadContext *) context;
+  auto *tc = (ThreadContext *) context;
   GlobalContext *gc = tc->global_context;
   tc->append_to_map_vector (std::make_pair (key, value));
   gc->increment_intermediary_elements_number ();
@@ -24,7 +24,7 @@ void emit2 (K2 *key, V2 *value, void *context)
 
 void getJobState (JobHandle job, JobState *state)
 {
-  GlobalContext *global_context = (GlobalContext *) job;
+  auto *global_context = (GlobalContext *) job;
   state->stage = global_context->get_stage ();
   switch (state->stage)
     {
@@ -48,20 +48,20 @@ void getJobState (JobHandle job, JobState *state)
 void closeJobHandle (JobHandle job)
 {
   waitForJob (job);
-  GlobalContext *global_context = (GlobalContext *) job;
+  auto *global_context = (GlobalContext *) job;
   MapReduce::free_system ();
   delete global_context;
 }
 
 void waitForJob (JobHandle job)
 {
-  GlobalContext *global_context = (GlobalContext *) job;
+  auto *global_context = (GlobalContext *) job;
   pthread_mutex_lock (&global_context->wait_for_job_mutex);
   if (!global_context->is_job_ended)
     {
       for (auto it: MapReduce::threads)
         {
-          if (pthread_join (*it, NULL) != SUCCESS_CODE)
+          if (pthread_join (*it, nullptr) != SUCCESS_CODE)
             {
               std::cout << PTHREAD_JOIN_FAILED;
               exit (EXIT_ERROR_CODE);
@@ -77,7 +77,7 @@ void emit3 (K3 *key, V3 *value, void *context)
   auto *tc = (ThreadContext *) context;
   GlobalContext *gc = tc->global_context;
   pthread_mutex_lock (&gc->output_vec_mutex);
-  gc->output_vec.push_back (std::make_pair (key, value));
+  gc->output_vec.emplace_back (key, value);
   pthread_mutex_unlock (&gc->output_vec_mutex);
   gc->increment_first_counter_general_atomic (tc->curr_reduce_vector_size);
 }

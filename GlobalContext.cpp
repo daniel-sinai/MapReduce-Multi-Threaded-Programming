@@ -37,13 +37,13 @@ stage_t GlobalContext::get_stage ()
 
 uint64_t GlobalContext::get_first_counter_value ()
 {
-  uint64_t mask = (uint64_t) (general_atomic.load () & 8388604);
+  auto mask = (uint64_t) (general_atomic.load () & 8388604);
   return mask >> 2;
 }
 
 uint64_t GlobalContext::get_second_counter_value ()
 {
-  uint64_t mask = general_atomic.load () & 18446744065119617024;
+  uint64_t mask = general_atomic.load () & (~8589934591);
   return mask >> 33;
 }
 
@@ -52,15 +52,14 @@ void GlobalContext::set_stage_and_reset_general_atomic (
 {
   uint64_t new_value = general_atomic.load ();
   new_value = new_value & (~3);
-  new_value = stage | stage;
+  new_value = new_value | stage;
   if (reset_first)
     {
       new_value = new_value & (~8388604);
     }
   if (reset_second)
     {
-      new_value = new_value & (~18446744065119617024);
+      new_value = new_value & (8589934591);
     }
   general_atomic.exchange (new_value);
 }
-

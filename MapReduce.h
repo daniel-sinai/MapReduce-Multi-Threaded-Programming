@@ -14,7 +14,7 @@ class MapReduce {
   static void *job_manager (void *arg);
   static void map_manager (ThreadContext *tc, GlobalContext *gc);
   static void sort_mid_vector (ThreadContext *tc);
-  static void shuffle_manager (ThreadContext *tc, GlobalContext *gc);
+  static void shuffle_manager (GlobalContext *gc);
   static void reduce_manager (ThreadContext *tc, GlobalContext *gc);
   static K2 *find_max_k2_from_threads_vectors ();
   static bool is_intermediary_keys_equal (K2 *key1, K2 *key2);

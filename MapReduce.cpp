@@ -7,10 +7,10 @@ void MapReduce::start_job (int multi_thread_level, GlobalContext *global_context
 {
   for (int i = 0; i < multi_thread_level; ++i)
     {
-      ThreadContext *curr_context = new ThreadContext (i, global_context);
+      auto *curr_context = new ThreadContext (i, global_context);
       MapReduce::contexts.push_back (curr_context);
-      pthread_t *curr_thread = new pthread_t ();
-      if (pthread_create (curr_thread, NULL, job_manager, curr_context) != SUCCESS_CODE)
+      auto *curr_thread = new pthread_t ();
+      if (pthread_create (curr_thread, nullptr, job_manager, curr_context) != SUCCESS_CODE)
         {
           fprintf (stderr, PTHREAD_CREATE_FAILED);
 //          std::cout << PTHREAD_CREATE_FAILED;
@@ -22,9 +22,9 @@ void MapReduce::start_job (int multi_thread_level, GlobalContext *global_context
 
 void *MapReduce::job_manager (void *arg)
 {
-  ThreadContext *tc = (ThreadContext *) arg;
+  auto *tc = (ThreadContext *) arg;
   GlobalContext *gc = tc->global_context;
-  gc->set_stage (MAP_STAGE);
+  gc->set_stage_and_reset_general_atomic(MAP_STAGE);
   map_manager (tc, gc);
   sort_mid_vector (tc);
   gc->threads_barrier->barrier ();
@@ -44,7 +44,7 @@ void *MapReduce::job_manager (void *arg)
 void MapReduce::map_manager (ThreadContext *tc, GlobalContext *gc)
 {
   uint32_t curr_id = gc->increment_next_pair_index ();
-  while (curr_id < gc->get_pairs_number ())
+  while (curr_id < (uint32_t) gc->get_pairs_number ())
     {
       InputPair key_value = gc->input_vec[curr_id];
       gc->client.map (key_value.first, key_value.second, tc);
@@ -58,12 +58,12 @@ void MapReduce::sort_mid_vector (ThreadContext *tc)
   std::sort (tc->map_vector.begin (), tc->map_vector.end (), MapReduce::compare_k2);
 }
 
-void MapReduce::shuffle_manager (ThreadContext *tc, GlobalContext *gc)
+void MapReduce::shuffle_manager (GlobalContext *gc)
 {
   K2 *curr_max_k2 = find_max_k2_from_threads_vectors ();
   while (curr_max_k2 != nullptr)
     {
-      std::vector<IntermediatePair> *curr_key_vector = new std::vector<IntermediatePair> ();
+      auto *curr_key_vector = new std::vector<IntermediatePair> ();
       for (auto curr_tc: contexts)
         {
           std::vector<IntermediatePair> &curr_thread_vector = curr_tc->map_vector;
@@ -88,7 +88,7 @@ void MapReduce::reduce_manager (ThreadContext *tc, GlobalContext *gc)
   while (curr_id < gc->shuffled_vectors.size ())
     {
       IntermediateVec *mid_vector = gc->shuffled_vectors[curr_id];
-      tc->curr_reduce_vector_size = mid_vector->size ();
+      tc->curr_reduce_vector_size = (int) mid_vector->size ();
       gc->client.reduce (mid_vector, tc);
       curr_id = gc->increment_next_pair_index ();
     }
@@ -102,7 +102,7 @@ K2 *MapReduce::find_max_k2_from_threads_vectors ()
       if (tc->map_vector.empty ())
         { continue; }
       K2 *cur_k2 = tc->map_vector.back ().first;
-      if (cur_max == nullptr)
+      if ((cur_max == nullptr) or (*cur_max < *cur_k2))
         {
           cur_max = cur_k2;
         }

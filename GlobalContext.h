@@ -20,12 +20,10 @@ class GlobalContext {
   std::atomic<uint32_t> next_pair_index{0};
   std::atomic<uint64_t> general_atomic{0};
   int pairs_number;
-  stage_t stage;
  public:
   const MapReduceClient &client;
   const InputVec &input_vec;
   OutputVec &output_vec;
-  int multi_thread_level;
   pthread_mutex_t output_vec_mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_mutex_t wait_for_job_mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
@@ -49,10 +47,6 @@ class GlobalContext {
   }
   int get_pairs_number () const
   { return this->pairs_number; }
-
-  // Setters
-  void set_stage (stage_t new_stage)
-  { this->stage = new_stage; }
 
   // Atmoic variables
   uint32_t increment_next_pair_index ()
