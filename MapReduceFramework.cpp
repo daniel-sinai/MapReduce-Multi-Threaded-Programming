@@ -19,7 +19,7 @@ void emit2 (K2 *key, V2 *value, void *context)
   auto *tc = (ThreadContext *) context;
   GlobalContext *gc = tc->global_context;
   tc->append_to_map_vector (std::make_pair (key, value));
-  gc->increment_intermediary_elements_number ();
+  gc->increment_second_counter_general_atomic ();
 }
 
 void getJobState (JobHandle job, JobState *state)

@@ -30,6 +30,7 @@ class GlobalContext {
   MidVectors shuffled_vectors;
   Barrier *threads_barrier;
   bool is_job_ended = false;
+  int intermediary_elements;
 
   GlobalContext (const MapReduceClient &client, const InputVec &input_vec,
                  OutputVec &output_vec, int multiThreadLevel);
@@ -43,7 +44,7 @@ class GlobalContext {
   float get_shuffle_progress_percentage ()
   {
     return (float) this->get_first_counter_value ()
-           / (float) get_second_counter_value () * 100.0;
+           / (float) intermediary_elements * 100.0;
   }
   int get_pairs_number () const
   { return this->pairs_number; }
@@ -51,12 +52,14 @@ class GlobalContext {
   // Atmoic variables
   uint32_t increment_next_pair_index ()
   { return (this->next_pair_index)++; }
-  uint32_t increment_progress_counter (int inc = 1)
-  { return this->progress_counter.fetch_add (inc); }
-  uint32_t increment_intermediary_elements_number ()
-  { return (this->intermediary_elements_number)++; }
-  void reset_counters ();
-
+  void set_stage_and_reset_general_atomic (stage_t stage);
+  void increment_first_counter_general_atomic (uint64_t inc = 1);
+  void increment_second_counter_general_atomic (uint64_t inc = 1);
+  stage_t get_stage ();
+  uint64_t get_first_counter_value ();
+  uint64_t get_second_counter_value ();
+  void reset_next_pair_index ()
+  { next_pair_index.exchange (0); }
   ~GlobalContext ();
 };
 

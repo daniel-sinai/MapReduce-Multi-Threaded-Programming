@@ -3,14 +3,16 @@
 std::vector<pthread_t *> MapReduce::threads;
 std::vector<ThreadContext *> MapReduce::contexts;
 
-void MapReduce::start_job (int multi_thread_level, GlobalContext *global_context)
+void
+MapReduce::start_job (int multi_thread_level, GlobalContext *global_context)
 {
   for (int i = 0; i < multi_thread_level; ++i)
     {
       auto *curr_context = new ThreadContext (i, global_context);
       MapReduce::contexts.push_back (curr_context);
       auto *curr_thread = new pthread_t ();
-      if (pthread_create (curr_thread, nullptr, job_manager, curr_context) != SUCCESS_CODE)
+      if (pthread_create (curr_thread, nullptr, job_manager, curr_context)
+          != SUCCESS_CODE)
         {
           fprintf (stderr, PTHREAD_CREATE_FAILED);
 //          std::cout << PTHREAD_CREATE_FAILED;
@@ -24,16 +26,17 @@ void *MapReduce::job_manager (void *arg)
 {
   auto *tc = (ThreadContext *) arg;
   GlobalContext *gc = tc->global_context;
-  gc->set_stage_and_reset_general_atomic(MAP_STAGE);
+  gc->set_stage_and_reset_general_atomic (MAP_STAGE);
   map_manager (tc, gc);
   sort_mid_vector (tc);
   gc->threads_barrier->barrier ();
   if (tc->get_thread_id () == 0)
     {
-      gc->set_stage_and_reset_general_atomic(SHUFFLE_STAGE, true, false);
-      shuffle_manager (tc, gc);
-      gc->reset_counters ();
-      gc->set_stage (REDUCE_STAGE);
+      gc->intermediary_elements = (int) gc->get_second_counter_value();
+      gc->set_stage_and_reset_general_atomic (SHUFFLE_STAGE);
+      shuffle_manager (gc);
+      gc->set_stage_and_reset_general_atomic (REDUCE_STAGE);
+      gc->reset_next_pair_index ();
     }
   gc->threads_barrier->barrier ();
   reduce_manager (tc, gc);
@@ -49,7 +52,7 @@ void MapReduce::map_manager (ThreadContext *tc, GlobalContext *gc)
       InputPair key_value = gc->input_vec[curr_id];
       gc->client.map (key_value.first, key_value.second, tc);
       curr_id = gc->increment_next_pair_index ();
-      gc->increment_progress_counter ();
+      gc->increment_first_counter_general_atomic ();
     }
 }
 
@@ -106,10 +109,6 @@ K2 *MapReduce::find_max_k2_from_threads_vectors ()
         {
           cur_max = cur_k2;
         }
-      else if (*cur_max < *cur_k2)
-        {
-          cur_max = cur_k2;
-        }
     }
   return cur_max;
 }
@@ -119,7 +118,8 @@ bool MapReduce::is_intermediary_keys_equal (K2 *key1, K2 *key2)
   return (not(*key1 < *key2)) and (not(*key2 < *key1));
 }
 
-bool MapReduce::compare_k2 (const IntermediatePair &p1, const IntermediatePair &p2)
+bool
+MapReduce::compare_k2 (const IntermediatePair &p1, const IntermediatePair &p2)
 {
   return *(p1.first) < *(p2.first);
 }

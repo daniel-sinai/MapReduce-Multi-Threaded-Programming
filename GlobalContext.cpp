@@ -5,9 +5,8 @@ GlobalContext::GlobalContext (const MapReduceClient &client,
                               int multiThreadLevel) :
     client (client), input_vec (input_vec), output_vec (output_vec)
 {
-  this->pairs_number = input_vec.size ();
-  this->set_stage (UNDEFINED_STAGE);
-  this->multi_thread_level = multiThreadLevel;
+  this->pairs_number = (int) input_vec.size ();
+  this->set_stage_and_reset_general_atomic(UNDEFINED_STAGE);
   this->threads_barrier = new Barrier (multiThreadLevel);
   this->intermediary_elements = 0;
 }
