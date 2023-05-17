@@ -19,10 +19,6 @@ class ThreadContext {
   // Getters
   int get_thread_id () const
   { return this->thread_id; }
-
-  // Vectors
-  void append_to_map_vector (IntermediatePair to_append)
-  { this->map_vector.push_back (to_append); }
 };
 
 #endif //EX3_THREADCONTEXT_H

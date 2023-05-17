@@ -11,20 +11,25 @@ startMapReduceJob (const MapReduceClient &client, const InputVec &inputVec,
   auto *global_context = new GlobalContext (
       client, inputVec, outputVec, multiThreadLevel);
   MapReduce::start_job (multiThreadLevel, global_context);
-  return global_context;
+  return static_cast<JobHandle>(global_context);
 }
 
 void emit2 (K2 *key, V2 *value, void *context)
 {
   auto *tc = (ThreadContext *) context;
   GlobalContext *gc = tc->global_context;
-  tc->append_to_map_vector (std::make_pair (key, value));
+  tc->map_vector.emplace_back (std::make_pair (key, value));
   gc->increment_second_counter_general_atomic ();
 }
 
 void getJobState (JobHandle job, JobState *state)
 {
   auto *global_context = (GlobalContext *) job;
+  if (pthread_mutex_lock (&global_context->get_job_mutex) != SUCCESS_CODE)
+    {
+        std::cout << PTHREAD_MUTEX_LOCK_FAILED;
+        exit(EXIT_ERROR_CODE);
+    }
   state->stage = global_context->get_stage ();
   switch (state->stage)
     {
@@ -43,6 +48,11 @@ void getJobState (JobHandle job, JobState *state)
       default:
         break;
     }
+    if (pthread_mutex_unlock (&global_context->get_job_mutex) != SUCCESS_CODE)
+    {
+        std::cout << PTHREAD_MUTEX_UNLOCK_ERROR;
+        exit(EXIT_ERROR_CODE);
+    }
 }
 
 void closeJobHandle (JobHandle job)
@@ -56,7 +66,11 @@ void closeJobHandle (JobHandle job)
 void waitForJob (JobHandle job)
 {
   auto *global_context = (GlobalContext *) job;
-  pthread_mutex_lock (&global_context->wait_for_job_mutex);
+  if (pthread_mutex_lock (&global_context->wait_for_job_mutex) != SUCCESS_CODE)
+  {
+      std::cout << PTHREAD_MUTEX_LOCK_FAILED;
+      exit(EXIT_ERROR_CODE);
+  }
   if (!global_context->is_job_ended)
     {
       for (auto it: MapReduce::threads)
@@ -69,15 +83,27 @@ void waitForJob (JobHandle job)
         }
       global_context->is_job_ended = true;
     }
-  pthread_mutex_unlock (&global_context->wait_for_job_mutex);
+  if (pthread_mutex_unlock (&global_context->wait_for_job_mutex) != SUCCESS_CODE)
+  {
+      std::cout << PTHREAD_MUTEX_UNLOCK_ERROR;
+      exit(EXIT_ERROR_CODE);
+  }
 }
 
 void emit3 (K3 *key, V3 *value, void *context)
 {
   auto *tc = (ThreadContext *) context;
   GlobalContext *gc = tc->global_context;
-  pthread_mutex_lock (&gc->output_vec_mutex);
+  if (pthread_mutex_lock (&gc->output_vec_mutex) != SUCCESS_CODE)
+  {
+      std::cout << PTHREAD_MUTEX_LOCK_FAILED;
+      exit(EXIT_ERROR_CODE);
+  }
   gc->output_vec.emplace_back (key, value);
-  pthread_mutex_unlock (&gc->output_vec_mutex);
+  if (pthread_mutex_unlock (&gc->output_vec_mutex) != SUCCESS_CODE)
+    {
+      std::cout << PTHREAD_MUTEX_UNLOCK_FAILED;
+      exit(EXIT_ERROR_CODE);
+    }
   gc->increment_first_counter_general_atomic (tc->curr_reduce_vector_size);
 }

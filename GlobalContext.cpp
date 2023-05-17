@@ -43,8 +43,7 @@ uint64_t GlobalContext::get_second_counter_value ()
   return mask >> 33;
 }
 
-void GlobalContext::set_stage_and_reset_general_atomic (
-    stage_t stage)
+void GlobalContext::set_stage_and_reset_general_atomic (stage_t stage)
 {
   general_atomic.exchange (stage);
 }

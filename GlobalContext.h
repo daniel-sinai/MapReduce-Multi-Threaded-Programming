@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <atomic>
 #include <iostream>
+#include <map>
 #include "MapReduceClient.h"
 #include "MapReduceFramework.h"
 #include "Barrier.h"
@@ -26,8 +27,12 @@ class GlobalContext {
   OutputVec &output_vec;
   pthread_mutex_t output_vec_mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_mutex_t wait_for_job_mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t get_job_mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t map_mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t reduce_mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
   MidVectors shuffled_vectors;
+  std::map<K2*, std::vector<IntermediatePair>*> shuffle_map;
   Barrier *threads_barrier;
   bool is_job_ended = false;
   int intermediary_elements;
