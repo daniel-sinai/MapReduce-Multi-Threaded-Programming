@@ -123,6 +123,7 @@ bool MapReduce::compare_k2 (const IntermediatePair &p1, const IntermediatePair &
 {
   return *(p1.first) < *(p2.first);
 }
+
 void MapReduce::free_system ()
 {
   for (auto it: threads)

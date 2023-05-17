@@ -9,6 +9,7 @@ GlobalContext::GlobalContext (const MapReduceClient &client,
   this->set_stage (UNDEFINED_STAGE);
   this->multi_thread_level = multiThreadLevel;
   this->threads_barrier = new Barrier (multiThreadLevel);
+  this->intermediary_elements = 0;
 }
 
 GlobalContext::~GlobalContext ()
@@ -18,16 +19,12 @@ GlobalContext::~GlobalContext ()
 
 void GlobalContext::increment_first_counter_general_atomic (uint64_t inc)
 {
-  uint64_t new_value = general_atomic.load ();
-  new_value += (inc << 2);
-  general_atomic.exchange (new_value);
+  general_atomic.fetch_add (inc << 2);
 }
 
 void GlobalContext::increment_second_counter_general_atomic (uint64_t inc)
 {
-  uint64_t new_value = general_atomic.load ();
-  new_value += (inc << 33);
-  general_atomic.exchange (new_value);
+  general_atomic.fetch_add ((inc << 33));
 }
 
 stage_t GlobalContext::get_stage ()
@@ -48,18 +45,7 @@ uint64_t GlobalContext::get_second_counter_value ()
 }
 
 void GlobalContext::set_stage_and_reset_general_atomic (
-    stage_t stage, bool reset_first, bool reset_second)
+    stage_t stage)
 {
-  uint64_t new_value = general_atomic.load ();
-  new_value = new_value & (~3);
-  new_value = new_value | stage;
-  if (reset_first)
-    {
-      new_value = new_value & (~8388604);
-    }
-  if (reset_second)
-    {
-      new_value = new_value & (8589934591);
-    }
-  general_atomic.exchange (new_value);
+  general_atomic.exchange (stage);
 }
